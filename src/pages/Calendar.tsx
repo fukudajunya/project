@@ -181,7 +181,7 @@ export default function CalendarPage() {
             return `${year}年${month}月`;
           }}
           onClickMonth={() => {}} // 月表示のクリックを無効化
-          minDetail="month" // 年の選択を無効化
+          minDetail="month" // 年の選択を無効
           prev2Label={null} // 前年ボタンを非表示
           next2Label={null} // 次年ボタンを非表示
         />
