@@ -1,0 +1,56 @@
+/*
+  # Simplify RLS policies for items
+
+  1. Changes
+    - Simplify RLS policies for items table
+    - Simplify storage policies
+    - Remove unnecessary checks
+
+  2. Security
+    - Anyone can view items
+    - Only approved representatives and staff can manage items
+    - Storage policies aligned with items policies
+*/
+
+-- Drop existing policies
+DROP POLICY IF EXISTS "Anyone can view items" ON items;
+DROP POLICY IF EXISTS "Representatives and staff can manage items" ON items;
+DROP POLICY IF EXISTS "Anyone can view items" ON storage.objects;
+DROP POLICY IF EXISTS "Representatives and staff can manage storage" ON storage.objects;
+
+-- Create simplified policies for items table
+CREATE POLICY "Anyone can view items"
+  ON items FOR SELECT
+  TO public
+  USING (true);
+
+CREATE POLICY "Representatives and staff can manage items"
+  ON items FOR ALL
+  TO public
+  USING (
+    EXISTS (
+      SELECT 1 FROM dancers
+      WHERE dancers.id = auth.uid()
+      AND dancers.role IN ('代表', 'スタッフ')
+      AND dancers.is_approved = true
+    )
+  );
+
+-- Create simplified storage policies
+CREATE POLICY "Anyone can view items"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'items');
+
+CREATE POLICY "Representatives and staff can manage storage"
+  ON storage.objects FOR ALL
+  TO public
+  USING (
+    bucket_id = 'items'
+    AND EXISTS (
+      SELECT 1 FROM dancers
+      WHERE dancers.id = auth.uid()
+      AND dancers.role IN ('代表', 'スタッフ')
+      AND dancers.is_approved = true
+    )
+  );
